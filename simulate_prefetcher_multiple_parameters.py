@@ -5,8 +5,6 @@ import time
 
 os.chdir("/home/shomec/a/alekswaa/Documents/Prefetcher_v5/")
 
-
-
 if __name__ == "__main__":
     test_count = 0
     starting_time = time.time()

@@ -53,16 +53,16 @@ IT_ENTRY* search_for_it_entry(Addr PC)
         std::deque<IT_ENTRY>::iterator it = IT_table.begin();
         for(; it != IT_table.end(); it++){
             if(it->PC == PC){
-                /*Move the newly addressed entry to front of table*/
+                /* Move the newly addressed entry to front of table */
                 IT_ENTRY temp = *it;
-                IT_table.push_front(temp);
                 IT_table.erase(it);
+                IT_table.push_front(temp);
+
                 return &IT_table.front();
             }
+            
         }
-        /*The element at the end is always the oldest*/
-        IT_ENTRY* test = &IT_table.back();
-        test->last_ghb_entry = NULL;
+        // /*The element at the end is always the oldest*/
         IT_table.pop_back();
         return NULL;
     }
@@ -153,7 +153,7 @@ void prefetch_access(AccessStat stat)
                 temp.next_addr->prev_addr = NULL;
 
             GHB_fifo.pop_back();
-    }
+        }
 
         /*Check if there is an entry in the IT_table*/
         IT_ENTRY* curr_it_entry = search_for_it_entry(stat.pc);
@@ -165,7 +165,7 @@ void prefetch_access(AccessStat stat)
             new_it_entry.PC = stat.pc;
             new_it_entry.last_ghb_entry = &GHB_fifo.front();
             IT_table.push_front(new_it_entry);
-            curr_it_entry = &IT_table.front();
+            // curr_it_entry = &IT_table.front();
 
         }else{
             /*Entry in IT_table exists, pointing to it using curr_it_entry*/
@@ -177,23 +177,24 @@ void prefetch_access(AccessStat stat)
             new_ghb_entry.prev_addr->next_addr = &GHB_fifo.front();
             //The it_table entry also points to this address
             curr_it_entry->last_ghb_entry = &GHB_fifo.front();
-        }
+        
 
-        find_prefetches(*curr_it_entry);
-         
-        for(int i = 0; i < PCDC_degree; i++){
-            if(i > ((int)candidates.size())-1) {
-                return;
-            }
+            find_prefetches(*curr_it_entry);
             
-            bool is_in_mshr_queue = in_mshr_queue(candidates[i]) == 1;
-            bool is_in_cache = in_cache(candidates[i]) == 1;
-            bool is_being_prefetched = std::find(prefetching_in_progress.begin(), prefetching_in_progress.end(), candidates[i]) != prefetching_in_progress.end();
-            if(!is_in_mshr_queue && !is_in_cache && !is_being_prefetched && prefetching_in_progress.size() < MAX_QUEUE_SIZE){
-                issue_prefetch(candidates[i]);
-                prefetching_in_progress.push_front(candidates[i]);
-            }
-        }        
+            for(int i = 0; i < PCDC_degree; i++){
+                if(i > ((int)candidates.size())-1) {
+                    return;
+                }
+                
+                bool is_in_mshr_queue = in_mshr_queue(candidates[i]) == 1;
+                bool is_in_cache = in_cache(candidates[i]) == 1;
+                bool is_being_prefetched = std::find(prefetching_in_progress.begin(), prefetching_in_progress.end(), candidates[i]) != prefetching_in_progress.end();
+                if(!is_in_mshr_queue && !is_in_cache && !is_being_prefetched && prefetching_in_progress.size() < MAX_QUEUE_SIZE){
+                    issue_prefetch(candidates[i]);
+                    prefetching_in_progress.push_front(candidates[i]);
+                }
+            }        
+        }
     }
 }
 
